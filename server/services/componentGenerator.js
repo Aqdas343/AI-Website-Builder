@@ -1,0 +1,331 @@
+import OpenAI from 'openai';
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+
+const SYSTEM_MESSAGE = `CRITICAL RULE: Generate ONLY the section types listed in the Layout array. Do NOT add extra sections. For login pages generate ONLY navbar + login-form. For signup pages generate ONLY navbar + signup-form. For forgot-password pages generate ONLY the forgot-password section.
+
+You are a world-class copywriter and content strategist for premium tech startups and SaaS companies.
+Generate rich, detailed, conversion-focused content for each website section.
+Return ONLY a valid JSON array with no extra text, no markdown, no code blocks.
+
+Each item: { "id": "type-number", "type": "section type", "props": { ...detailed props }, "animations": { "entry": "fade-up", "scroll": "reveal", "hover": "scale" } }
+
+ALLOWED SECTION TYPES AND THEIR DETAILED PROPS:
+
+navbar: {
+  brand: "Company name",
+  tagline: "short tagline under brand",
+  links: [{ label, href }],
+  ctaText: "Get Started Free",
+  ctaHref: "#pricing",
+  animations: { logo: "spin-once", links: "stagger" }
+}
+
+hero: {
+  badge: "short badge text (e.g. '✨ Now with AI v2.0')",
+  headline: "POWERFUL 6-10 word headline that grabs attention",
+  headlineHighlight: "the word(s) to highlight with gradient",
+  subheadline: "2-3 sentence compelling description of the value proposition",
+  primaryCta: "primary button text",
+  secondaryCta: "secondary button text (e.g. Watch Demo)",
+  socialProof: "e.g. Trusted by 50,000+ creators worldwide",
+  stats: [{ value: "10K+", label: "Active Users" }, { value: "99.9%", label: "Uptime" }, { value: "4.9★", label: "Rating" }],
+  floatingElements: [
+    { icon: "⚡", text: "Fastest AI", x: "10%", y: "20%", rotate: "-5deg" },
+    { icon: "🎨", text: "Beautiful UI", x: "80%", y: "15%", rotate: "8deg" }
+  ],
+  motionEffect: "one of: parallax, mouse-tracking, typing, float"
+}
+
+stats: {
+  title: "optional section title",
+  items: [{ value: "50K+", label: "Users", description: "brief context" }]
+}
+
+features: {
+  badge: "FEATURES",
+  title: "Why teams choose [Product]",
+  subtitle: "2 sentence description",
+  items: [
+    {
+      icon: "emoji",
+      title: "Feature name",
+      description: "2-3 sentence detailed description of this feature and its benefit",
+      highlight: "key benefit phrase"
+    }
+  ]
+}
+
+how-it-works: {
+  badge: "HOW IT WORKS",
+  title: "Get started in 3 simple steps",
+  subtitle: "description",
+  steps: [
+    {
+      number: "01",
+      title: "Step title",
+      description: "2-3 sentence detailed description",
+      icon: "emoji"
+    }
+  ]
+}
+
+testimonials: {
+  badge: "TESTIMONIALS",
+  title: "Loved by thousands of creators",
+  subtitle: "description",
+  items: [
+    {
+      quote: "Detailed 2-3 sentence testimonial that sounds authentic and specific",
+      name: "Full Name",
+      role: "Job Title",
+      company: "Company Name",
+      avatar: "initials",
+      rating: 5
+    }
+  ]
+}
+
+pricing: {
+  badge: "PRICING",
+  title: "Simple, transparent pricing",
+  subtitle: "description",
+  plans: [
+    {
+      name: "Plan name",
+      price: "$29",
+      period: "/month",
+      description: "Who this plan is for",
+      features: ["detailed feature 1", "detailed feature 2"],
+      cta: "Get Started",
+      popular: false,
+      badge: "Most Popular"
+    }
+  ]
+}
+
+faq: {
+  badge: "FAQ",
+  title: "Frequently asked questions",
+  subtitle: "description",
+  items: [
+    {
+      question: "Detailed question?",
+      answer: "Comprehensive 2-3 sentence answer that fully addresses the question"
+    }
+  ]
+}
+
+cta: {
+  badge: "GET STARTED",
+  headline: "Ready to build something amazing?",
+  subheadline: "2 sentence compelling reason to act now",
+  primaryCta: "Start Building Free",
+  secondaryCta: "Talk to Sales",
+  note: "No credit card required • Free forever plan"
+}
+
+footer: {
+  brand: "Company name",
+  tagline: "Short brand tagline",
+  description: "1-2 sentence company description",
+  links: {
+    Product: [{ label, href }],
+    Company: [{ label, href }],
+    Legal: [{ label, href }]
+  },
+  social: [{ platform: "Twitter", href: "#", icon: "𝕏" }],
+  copyright: "© 2025 Company. All rights reserved."
+}
+
+login-form: { title, subtitle, submitText, forgotPasswordText, signupText }
+signup-form: { title, subtitle, submitText, fields: [{ label, type, placeholder }], loginText }
+forgot-password: { title, subtitle, submitText, backToLoginText }
+about: { title, description, highlights: [] }
+contact: { title, subtitle, email }
+portfolio: { title, items: [{ title, description, tags: [] }] }
+team: { title, members: [{ name, role, bio }] }
+
+ANIMATION RULES - Read the animations.types array passed with layout and apply accordingly:
+- If 'matrix-rain' in types → hero section gets motionEffect: 'matrix-rain'
+- If 'aurora-background' in types → hero section gets motionEffect: 'aurora'
+- If 'glitch-effect' in types → hero headlineHighlight should be set, navbar gets animations.logo: 'glitch'
+- If 'magnetic-buttons' in types → cta/hero primaryCta props are set, all button sections note it
+- If 'tilt-3d' in types → features/testimonials/pricing cards note it
+- If 'particles' in types → hero gets motionEffect: 'particles'
+- If 'typing-effect' in types → hero gets motionEffect: 'typing', headline should be suitable for typing
+- If 'glow-pulse' in types → cta section gets animations.special: 'glow-pulse'
+- If 'blob-animation' in types → hero/cta sections note it
+- If 'noise-texture' in types → it's a global overlay, no prop needed
+- If 'ripple' in types → it's a global effect, no prop needed
+
+CONTENT RULES:
+- Make ALL content specific to the industry and goal — no generic placeholders
+- Hero headline must be POWERFUL and memorable
+- Features should have 6 items minimum for landing pages
+- Testimonials should sound real and specific
+- Pricing should have 3 plans (Starter, Pro, Enterprise)
+- FAQ should have 6-8 questions
+- All descriptions should be 2-3 sentences, NOT one-liners
+- Use the brand's tone and target audience from the analysis`;
+
+const VALID_TYPES = new Set([
+  'navbar','hero','features','about','pricing','testimonials','faq','contact','footer',
+  'cta','stats','team','how-it-works','portfolio','blog-list',
+  'login-form','signup-form','forgot-password',
+  'dashboard-header','dashboard-sidebar','dashboard-stats','dashboard-table',
+]);
+
+const strictTypes = {
+  login: ['navbar', 'login-form'],
+  signup: ['navbar', 'signup-form'],
+  'forgot-password': ['forgot-password'],
+};
+
+function buildDefaultProps(type, analysis) {
+  const brand = analysis?.brand || analysis?.industry || 'App';
+  const defaults = {
+    'login-form': {
+      title: `Welcome back to ${brand}`,
+      subtitle: 'Sign in to your account to continue',
+      submitText: 'Sign In',
+      forgotPasswordText: 'Forgot password?',
+      signupText: "Don't have an account?",
+    },
+    'signup-form': {
+      title: `Join ${brand} today`,
+      subtitle: 'Create your account and get started',
+      submitText: 'Create Account',
+      loginText: 'Already have an account?',
+      fields: [
+        { label: 'Full Name', type: 'text', placeholder: 'Enter your full name', icon: '👤' },
+        { label: 'Email Address', type: 'email', placeholder: 'name@company.com', icon: '✉' },
+        { label: 'Password', type: 'password', placeholder: '••••••••', icon: '🔒' },
+      ],
+    },
+    'forgot-password': {
+      title: 'Forgot your password?',
+      subtitle: 'Enter your email and we will send you a reset link',
+      submitText: 'Send Reset Link',
+      backToLoginText: 'Back to login',
+    },
+    navbar: {
+      brand: brand,
+      links: [{ label: 'Home', href: '/' }, { label: 'About', href: '#' }],
+      ctaText: 'Get Started',
+    },
+  };
+  return defaults[type] || {};
+}
+
+export async function generateComponents(layoutResult, analysisResult) {
+  let sections = Array.isArray(layoutResult) ? layoutResult : (layoutResult.sections || []);
+
+  const pageType = analysisResult?.pageType;
+  if (strictTypes[pageType]) {
+    sections = sections.filter((s) => strictTypes[pageType].includes(s.type));
+  }
+
+  const AUTH_FAST_PASS = ['login', 'signup', 'forgot-password'];
+  if (AUTH_FAST_PASS.includes(pageType)) {
+    return sections.map((s) => ({
+      id: `${s.type}-${Math.random().toString(36).slice(2, 8)}`,
+      type: s.type,
+      props: buildDefaultProps(s.type, analysisResult),
+      // analysisResult is the correct param name (not layoutResult / analysis)
+      animations: { entry: 'fade-up', types: analysisResult?.animations?.types || [] },
+    }));
+  }
+
+  const midPoint = Math.ceil(sections.length / 2);
+  const batch1 = sections.slice(0, midPoint);
+  const batch2 = sections.slice(midPoint);
+
+  const [res1, res2] = await Promise.all([
+    openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: SYSTEM_MESSAGE },
+        {
+          role: 'user',
+          content: `Batch 1 Layout: ${JSON.stringify(batch1)}\nAnalysis: ${JSON.stringify(analysisResult)}\nGlobal Animation Types: ${JSON.stringify(analysisResult.animations?.types || [])}`,
+        },
+      ],
+      temperature: 0.5,
+      max_tokens: 4000,
+    }),
+    openai.chat.completions.create({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: SYSTEM_MESSAGE },
+        {
+          role: 'user',
+          content: `Batch 2 Layout: ${JSON.stringify(batch2)}\nAnalysis: ${JSON.stringify(analysisResult)}\nGlobal Animation Types: ${JSON.stringify(analysisResult.animations?.types || [])}`,
+        },
+      ],
+      temperature: 0.5,
+      max_tokens: 4000,
+    })
+  ]);
+
+  const parseText = (text) => {
+    return text.trim()
+      .replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```\s*$/i, '').trim();
+  };
+
+  const t1 = parseText(res1.choices[0].message.content);
+  const t2 = parseText(res2.choices[0].message.content);
+
+  const safeParse = async (text, originalBatch) => {
+    try {
+      return JSON.parse(text);
+    } catch {
+      const retry = await openai.chat.completions.create({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'You are a JSON fixer. Return ONLY valid JSON.' },
+          { role: 'user', content: `Fix this invalid JSON array of sections: ${text}` }
+        ],
+        temperature: 0.1,
+      });
+      return JSON.parse(parseText(retry.choices[0].message.content));
+    }
+  };
+
+  const [p1, p2] = await Promise.all([
+    safeParse(t1, batch1),
+    safeParse(t2, batch2)
+  ]);
+
+  const combined = [...p1, ...p2];
+
+  // Get the exact section types from layout
+  const requiredTypes = sections.map((s) => s.type);
+
+  // Filter combined to only include sections that were in the layout
+  const filteredCombined = combined.filter((item) => requiredTypes.includes(item.type));
+
+  // If filtering removed everything, fall back to combined
+  const effectiveCombined = filteredCombined.length > 0 ? filteredCombined : combined;
+
+  const usedIds = new Set();
+
+  const sanitized = effectiveCombined
+    .filter((item) => item && item.type)
+    .map((item) => {
+      let id = item.id;
+      if (!id || usedIds.has(id)) {
+        id = `${item.type}-${Math.random().toString(36).slice(2, 8)}`;
+      }
+      usedIds.add(id);
+      return {
+        ...item,
+        type: VALID_TYPES.has(item.type) ? item.type : item.type.toLowerCase().replace(/\s+/g, '-'),
+        id,
+      };
+    })
+    .filter((item) => VALID_TYPES.has(item.type));
+
+  if (sanitized.length === 0) throw new Error('No valid sections in AI response');
+  return sanitized;
+}
