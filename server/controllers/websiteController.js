@@ -34,6 +34,7 @@ export const generate = async (req, res) => {
 
 export const getJobStatus = async (req, res) => {
   try {
+    console.log('[JobStatus] checking job:', req.params.jobId);
     const job = await websiteQueue.getJob(req.params.jobId);
 
     if (!job) {
@@ -67,7 +68,12 @@ export const getJobStatus = async (req, res) => {
       });
     }
 
-    return res.status(200).json({ status: state });
+    const progressData = job.progress || null;
+    console.log('[JobStatus] state:', state, 'progress:', JSON.stringify(progressData));
+    return res.status(200).json({ 
+      status: state,
+      progress: progressData,
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

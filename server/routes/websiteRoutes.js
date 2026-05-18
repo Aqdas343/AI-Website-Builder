@@ -11,7 +11,7 @@ const userRateLimiter = (req, res, next) => {
   const userId = req.user?.id;
   const now = Date.now();
   const windowMs = 15 * 60 * 1000;
-  const maxRequests = 10;
+  const maxRequests = 50;
   
   const userData = userGenerationCounts.get(userId) || { count: 0, resetAt: now + windowMs };
   

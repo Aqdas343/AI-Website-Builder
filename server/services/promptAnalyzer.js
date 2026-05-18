@@ -17,7 +17,15 @@ const PAGE_TYPE_PRESETS = {
   },
   dashboard: {
     pageType: 'dashboard',
-    sections: ['dashboard-header', 'dashboard-stats'],
+    sections: [
+      'dashboard-header',
+      'dashboard-sidebar',
+      'dashboard-stats',
+      'dashboard-charts',
+      'dashboard-table',
+      'dashboard-activity',
+      'footer',
+    ],
   },
   landing: {
     pageType: 'landing',
@@ -143,7 +151,20 @@ export function detectPageTypeFromPrompt(prompt) {
     return PAGE_TYPE_PRESETS.login;
   }
 
-  if (hasAny(p, ['dashboard', 'admin dashboard', 'admin panel', 'control panel'])) {
+  if (
+    hasAny(p, [
+      'dashboard',
+      'admin dashboard',
+      'admin panel',
+      'control panel',
+      'saas dashboard',
+      'analytics dashboard',
+      'voice dashboard',
+      'ai dashboard',
+      'app dashboard',
+      'management dashboard',
+    ])
+  ) {
     return PAGE_TYPE_PRESETS.dashboard;
   }
 
@@ -266,6 +287,19 @@ function applyPageTypeRules(analysis, userPrompt) {
     return analysis;
   }
 
+  if (analysis.pageType === 'dashboard') {
+    const current = Array.isArray(analysis.sections) ? analysis.sections : [];
+    const allowed = new Set(PAGE_TYPE_PRESETS.dashboard.sections);
+    const hasLandingLeak = current.some(
+      (s) => MARKETING_SECTIONS.has(s) && !allowed.has(s)
+    );
+    const hasUnknown = current.some((s) => !allowed.has(s));
+    if (hasLandingLeak || hasUnknown || current.length === 0) {
+      analysis.sections = [...PAGE_TYPE_PRESETS.dashboard.sections];
+    }
+    return analysis;
+  }
+
   sanitizeSectionsForPageType(analysis);
   return analysis;
 }
@@ -276,10 +310,65 @@ function addAnimationType(analysis, type) {
   }
 }
 
+function extractEffectKeywords(prompt) {
+  const lower = prompt.toLowerCase();
+  const effectMap = {
+    'cyberpunk': ['glitch-effect', 'glow-pulse', 'particles'],
+    'cyber punk': ['glitch-effect', 'glow-pulse', 'particles'],
+    'neon': ['glow-pulse', 'particles'],
+    'synthwave': ['glow-pulse', 'particles'],
+    'futuristic': ['particles', 'glow-pulse'],
+    'hacker': ['matrix-rain', 'glitch-effect'],
+    'sci-fi': ['particles', 'glow-pulse'],
+    'scifi': ['particles', 'glow-pulse'],
+    'retro': ['glitch-effect', 'noise-texture'],
+    'vaporwave': ['glow-pulse', 'blob-animation'],
+    'minimalist': ['particles'],
+    'elegant': ['glow-pulse', 'blob-animation'],
+    'dark': ['particles', 'glow-pulse'],
+    'gaming': ['glitch-effect', 'particles', 'glow-pulse'],
+    'crypto': ['particles', 'matrix-rain'],
+    'blockchain': ['particles', 'matrix-rain'],
+    'ai': ['particles', 'glow-pulse', 'typing-effect'],
+    'machine learning': ['particles', 'matrix-rain'],
+    'space': ['particles', 'aurora-background'],
+    'galaxy': ['particles', 'aurora-background'],
+    'cosmic': ['particles', 'aurora-background'],
+    'nature': ['blob-animation', 'particles'],
+    'organic': ['blob-animation'],
+    'medical': ['particles', 'glow-pulse'],
+    'finance': ['particles', 'tilt-3d'],
+    'startup': ['particles', 'tilt-3d', 'glow-pulse'],
+    'luxury': ['glow-pulse', 'blob-animation'],
+    'professional': ['particles', 'tilt-3d'],
+    'creative': ['blob-animation', 'particles', 'glow-pulse'],
+    'portfolio': ['particles', 'tilt-3d'],
+    'agency': ['glitch-effect', 'particles'],
+    'bold': ['glitch-effect', 'glow-pulse'],
+    'clean': ['particles'],
+    'modern': ['particles', 'tilt-3d'],
+    'premium': ['glow-pulse', 'tilt-3d', 'blob-animation'],
+  };
+
+  const found = new Set();
+  Object.entries(effectMap).forEach(([keyword, effects]) => {
+    if (lower.includes(keyword)) {
+      effects.forEach(e => found.add(e));
+    }
+  });
+  return Array.from(found);
+}
+
 function applyAnimationOverrides(analysis, userPrompt) {
   const promptLower = normalizePrompt(userPrompt);
   analysis.animations = analysis.animations || { enabled: true, types: [], intensity: 'medium' };
   analysis.animations.types = analysis.animations.types || [];
+
+  // Web search for animation effects mentioned in prompt
+  const effectKeywords = extractEffectKeywords(userPrompt);
+  if (effectKeywords.length > 0) {
+    effectKeywords.forEach(k => addAnimationType(analysis, k));
+  }
 
   if (
     hasAny(promptLower, [
@@ -303,7 +392,7 @@ function applyAnimationOverrides(analysis, userPrompt) {
     hasAny(promptLower, [
       'aurora',
       'northern lights',
-      'aurora borealis',
+      'aurora borealis', 
       'aurora effect',
       /aurora[\s-]*background/i,
     ])
@@ -358,7 +447,35 @@ function applyAnimationOverrides(analysis, userPrompt) {
       'floating particles',
       'particle background',
       'flying dots',
+      'bokeh',
+      'bokeh lights',
+      'floating lights',
+      'cyber grid',
+      'grid',
+      'neon waves',
+      'waves',
+      'circuit',
+      'circuit board',
+      'geometric',
+      'geometric shapes',
+      'gradient flow',
+      'flowing gradient',
+      'wallpaper',
+      'static',
+      'noise',
+      'deep space',
+      'space',
+      'galaxy',
+      'cosmic',
+      'nebula',
+      'starfield',
+      'stars',
+      /cyber[\s-]*grid/i,
+      /neon[\s-]*waves/i,
+      /circuit[\s-]*board/i,
+      /bokeh[\s-]*lights/i,
       /particle[\s-]*effect/i,
+      /deep[\s-]*space/i,
     ])
   ) {
     addAnimationType(analysis, 'particles');
@@ -428,6 +545,23 @@ function applyAnimationOverrides(analysis, userPrompt) {
     ])
   ) {
     addAnimationType(analysis, 'glow-pulse');
+  }
+
+  // Auto-assign default effects by page type if user specified none
+  const hasExtractedEffects = extractEffectKeywords(userPrompt).length > 0;
+  const hasExplicitEffects = analysis.animations.types.length > 0;
+
+  if (!hasExplicitEffects && !hasExtractedEffects) {
+    const pageType = analysis.pageType || 'landing';
+    const defaults = {
+      landing: ['particles', 'tilt-3d', 'glow-pulse'],
+      dashboard: ['particles', 'glow-pulse', 'tilt-3d'],
+      login: ['particles', 'glow-pulse'],
+      signup: ['particles', 'glow-pulse'],
+      'forgot-password': ['glow-pulse'],
+    };
+    const assigned = defaults[pageType] || defaults['landing'];
+    assigned.forEach((t) => addAnimationType(analysis, t));
   }
 
   analysis.animations.types = [...new Set(analysis.animations.types)];

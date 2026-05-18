@@ -10,8 +10,10 @@
   },
   "dependencies": {
     "archiver": "^7.0.1",
+    "axios": "^1.16.1",
     "bcryptjs": "^2.4.3",
     "bullmq": "^5.12.0",
+    "cheerio": "^1.2.0",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",

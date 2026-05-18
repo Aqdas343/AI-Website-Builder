@@ -15,9 +15,12 @@ const PAGE_TYPE_LAYOUTS = {
     { type: 'forgot-password', order: 0, spacing: '0px' },
   ],
   dashboard: [
-    { type: 'navbar', order: 0, spacing: '0px' },
-    { type: 'stats', order: 1, spacing: '80px' },
-    { type: 'features', order: 2, spacing: '80px' },
+    { type: 'dashboard-header', order: 0, spacing: '0px' },
+    { type: 'dashboard-sidebar', order: 1, spacing: '0px' },
+    { type: 'dashboard-stats', order: 2, spacing: '0px' },
+    { type: 'dashboard-charts', order: 3, spacing: '0px' },
+    { type: 'dashboard-activity', order: 4, spacing: '0px' },
+    { type: 'footer', order: 5, spacing: '0px' },
   ],
 };
 

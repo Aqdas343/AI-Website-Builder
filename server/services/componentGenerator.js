@@ -141,23 +141,88 @@ footer: {
 login-form: { title, subtitle, submitText, forgotPasswordText, signupText }
 signup-form: { title, subtitle, submitText, fields: [{ label, type, placeholder }], loginText }
 forgot-password: { title, subtitle, submitText, backToLoginText }
+dashboard-header: {
+  title: "App or product name",
+  subtitle: "short tagline or user greeting",
+  notificationCount: 3,
+  userName: "User full name",
+  userRole: "User role/title",
+  userAvatar: "initials"
+}
+dashboard-sidebar: {
+  appName: "App name",
+  menuItems: [
+    { label: "Dashboard", icon: "📊", active: true },
+    { label: "Analytics", icon: "📈", active: false },
+    { label: "Voice AI", icon: "🎙️", active: false },
+    { label: "Transcription", icon: "📝", active: false },
+    { label: "Chat", icon: "💬", active: false },
+    { label: "Team", icon: "👥", active: false },
+    { label: "Settings", icon: "⚙️", active: false }
+  ],
+  userName: "User full name",
+  userRole: "User role",
+  userAvatar: "initials"
+}
+dashboard-stats: {
+  title: "Overview",
+  stats: [
+    { label: "Active Users", value: "24,891", change: "+12%", icon: "👥", trend: "up" },
+    { label: "Voice Sessions", value: "8,432", change: "+8%", icon: "🎙️", trend: "up" },
+    { label: "Accuracy", value: "98.7%", change: "+2%", icon: "🎯", trend: "up" },
+    { label: "Uptime", value: "99.9%", change: "stable", icon: "⚡", trend: "stable" }
+  ]
+}
+dashboard-charts: {
+  title: "Analytics",
+  usageChart: {
+    title: "Usage Over Time",
+    labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    values: [65, 80, 55, 90, 75, 40, 85]
+  },
+  distributionChart: {
+    title: "Language Distribution",
+    segments: [
+      { label: "English", value: 45, color: "purple" },
+      { label: "Spanish", value: 25, color: "cyan" },
+      { label: "French", value: 20, color: "violet" },
+      { label: "Other", value: 10, color: "gray" }
+    ]
+  }
+}
+dashboard-activity: {
+  title: "Recent Activity",
+  activities: [
+    { time: "2 min ago", event: "Voice session started by Ahmed K.", type: "voice" },
+    { time: "5 min ago", event: "Transcription completed — 3,200 words", type: "transcription" },
+    { time: "12 min ago", event: "New team member joined", type: "user" },
+    { time: "1 hr ago", event: "AI model updated to v2.4", type: "system" },
+    { time: "3 hr ago", event: "Monthly report exported", type: "report" }
+  ]
+}
 about: { title, description, highlights: [] }
 contact: { title, subtitle, email }
 portfolio: { title, items: [{ title, description, tags: [] }] }
 team: { title, members: [{ name, role, bio }] }
 
-ANIMATION RULES - Read the animations.types array passed with layout and apply accordingly:
-- If 'matrix-rain' in types → hero section gets motionEffect: 'matrix-rain'
-- If 'aurora-background' in types → hero section gets motionEffect: 'aurora'
-- If 'glitch-effect' in types → hero headlineHighlight should be set, navbar gets animations.logo: 'glitch'
-- If 'magnetic-buttons' in types → cta/hero primaryCta props are set, all button sections note it
-- If 'tilt-3d' in types → features/testimonials/pricing cards note it
-- If 'particles' in types → hero gets motionEffect: 'particles'
-- If 'typing-effect' in types → hero gets motionEffect: 'typing', headline should be suitable for typing
-- If 'glow-pulse' in types → cta section gets animations.special: 'glow-pulse'
-- If 'blob-animation' in types → hero/cta sections note it
-- If 'noise-texture' in types → it's a global overlay, no prop needed
-- If 'ripple' in types → it's a global effect, no prop needed
+ANIMATION RULES - Read the animations.types array passed with layout and apply accordingly.
+CRITICAL: Apply each effect to EVERY section that supports it, not just one section.
+
+- If 'particles' in types → hero gets motionEffect: 'particles', dashboard-header gets motionEffect: 'particles'. Both must have it if both exist in layout.
+- If 'matrix-rain' in types → hero gets motionEffect: 'matrix-rain', dashboard-header gets motionEffect: 'matrix-rain'
+- If 'aurora-background' in types → hero gets motionEffect: 'aurora', dashboard-header gets motionEffect: 'aurora'
+- If 'typing-effect' in types → hero gets motionEffect: 'typing', headline suitable for typing animation
+- If 'glitch-effect' in types → navbar gets animations.logo: 'glitch', hero headlineHighlight must be set, dashboard-header gets animations.titleEffect: 'glitch'
+- If 'magnetic-buttons' in types → hero primaryCta notes magnetic effect, cta primaryCta notes magnetic effect, dashboard-header cta notes it
+- If 'tilt-3d' in types → features items note tilt, testimonials items note tilt, pricing plans note tilt, stats items note tilt, dashboard-stats stats note tilt, dashboard-charts panels note tilt
+- If 'glow-pulse' in types → cta gets animations.special: 'glow-pulse', hero primaryCta notes glow, navbar gets animations.border: 'glow', dashboard-header gets animations.border: 'glow', dashboard-sidebar gets animations.border: 'glow'
+- If 'blob-animation' in types → hero notes blob background, cta notes blob background
+- If 'noise-texture' in types → global overlay, no prop needed
+- If 'ripple' in types → global effect, no prop needed
+- If 'particles' in types → dashboard-header gets motionEffect: 'particles'
+- If 'glow-pulse' in types → dashboard-header and dashboard-sidebar get animations.border: 'glow'
+- If 'tilt-3d' in types → dashboard-stats cards and dashboard-charts panels note tilt
+- If 'glitch-effect' in types → dashboard-header gets animations.titleEffect: 'glitch'
 
 CONTENT RULES:
 - Make ALL content specific to the industry and goal — no generic placeholders
@@ -167,13 +232,22 @@ CONTENT RULES:
 - Pricing should have 3 plans (Starter, Pro, Enterprise)
 - FAQ should have 6-8 questions
 - All descriptions should be 2-3 sentences, NOT one-liners
-- Use the brand's tone and target audience from the analysis`;
+- Use the brand's tone and target audience from the analysis
+
+For each component you generate, add a "sourceAttribution" field inside props with this structure:
+"sourceAttribution": {
+  "component": "<section type>",
+  "inspiredBy": "<title of web source used>",
+  "sourceUrl": "<url of web source>",
+  "dataUsed": "<brief description of what was taken from this source>"
+}`;
 
 const VALID_TYPES = new Set([
   'navbar','hero','features','about','pricing','testimonials','faq','contact','footer',
   'cta','stats','team','how-it-works','portfolio','blog-list',
   'login-form','signup-form','forgot-password',
   'dashboard-header','dashboard-sidebar','dashboard-stats','dashboard-table',
+  'dashboard-charts','dashboard-activity',
 ]);
 
 const strictTypes = {
@@ -181,6 +255,31 @@ const strictTypes = {
   signup: ['navbar', 'signup-form'],
   'forgot-password': ['forgot-password'],
 };
+
+const ANIMATION_SECTION_MAP = {
+  'tilt-3d': ['features', 'testimonials', 'pricing', 'team', 'portfolio', 'dashboard-stats', 'dashboard-charts'],
+  'glitch-effect': ['navbar', 'hero', 'cta', 'dashboard-header'],
+  'magnetic-buttons': ['hero', 'cta', 'pricing'],
+  'typing-effect': ['hero'],
+  'glow-pulse': ['hero', 'cta', 'dashboard-header', 'dashboard-sidebar', 'navbar', 'login-form', 'signup-form', 'forgot-password'],
+  particles: ['hero', 'dashboard-header', 'navbar', 'login-form', 'signup-form'],
+  'aurora-background': ['hero', 'navbar', 'login-form', 'signup-form', 'forgot-password', 'dashboard-header'],
+  'matrix-rain': ['hero', 'navbar', 'login-form', 'signup-form', 'dashboard-header'],
+  'blob-animation': ['hero', 'cta', 'login-form', 'signup-form', 'forgot-password'],
+};
+
+const GLOBAL_ONLY_ANIMATIONS = new Set(['noise-texture', 'ripple']);
+
+export function getSectionAnimationTypes(sectionType, globalTypes = []) {
+  if (!Array.isArray(globalTypes)) return [];
+
+  return globalTypes.filter((type) => {
+    if (GLOBAL_ONLY_ANIMATIONS.has(type)) return false;
+    const allowedSections = ANIMATION_SECTION_MAP[type];
+    if (!allowedSections) return false;
+    return allowedSections.includes(sectionType);
+  });
+}
 
 function buildDefaultProps(type, analysis) {
   const brand = analysis?.brand || analysis?.industry || 'App';
@@ -218,7 +317,7 @@ function buildDefaultProps(type, analysis) {
   return defaults[type] || {};
 }
 
-export async function generateComponents(layoutResult, analysisResult) {
+export async function generateComponents(layoutResult, analysisResult, webInsights = []) {
   let sections = Array.isArray(layoutResult) ? layoutResult : (layoutResult.sections || []);
 
   const pageType = analysisResult?.pageType;
@@ -232,8 +331,10 @@ export async function generateComponents(layoutResult, analysisResult) {
       id: `${s.type}-${Math.random().toString(36).slice(2, 8)}`,
       type: s.type,
       props: buildDefaultProps(s.type, analysisResult),
-      // analysisResult is the correct param name (not layoutResult / analysis)
-      animations: { entry: 'fade-up', types: analysisResult?.animations?.types || [] },
+      animations: {
+        entry: 'fade-up',
+        types: getSectionAnimationTypes(s.type, analysisResult?.animations?.types || []),
+      },
     }));
   }
 
@@ -248,7 +349,7 @@ export async function generateComponents(layoutResult, analysisResult) {
         { role: 'system', content: SYSTEM_MESSAGE },
         {
           role: 'user',
-          content: `Batch 1 Layout: ${JSON.stringify(batch1)}\nAnalysis: ${JSON.stringify(analysisResult)}\nGlobal Animation Types: ${JSON.stringify(analysisResult.animations?.types || [])}`,
+          content: `Batch 1 Layout: ${JSON.stringify(batch1)}\nAnalysis: ${JSON.stringify(analysisResult)}\nGlobal Animation Types: ${JSON.stringify(analysisResult.animations?.types || [])}\nWeb Research Insights (use these to write realistic, specific content for props like title, subtitle, features, descriptions): ${JSON.stringify(webInsights.slice(0, 5))}`,
         },
       ],
       temperature: 0.5,
@@ -260,7 +361,7 @@ export async function generateComponents(layoutResult, analysisResult) {
         { role: 'system', content: SYSTEM_MESSAGE },
         {
           role: 'user',
-          content: `Batch 2 Layout: ${JSON.stringify(batch2)}\nAnalysis: ${JSON.stringify(analysisResult)}\nGlobal Animation Types: ${JSON.stringify(analysisResult.animations?.types || [])}`,
+          content: `Batch 2 Layout: ${JSON.stringify(batch2)}\nAnalysis: ${JSON.stringify(analysisResult)}\nGlobal Animation Types: ${JSON.stringify(analysisResult.animations?.types || [])}\nWeb Research Insights (use these to write realistic, specific content for props like title, subtitle, features, descriptions): ${JSON.stringify(webInsights.slice(5, 10))}`,
         },
       ],
       temperature: 0.5,
@@ -298,19 +399,42 @@ export async function generateComponents(layoutResult, analysisResult) {
   ]);
 
   const combined = [...p1, ...p2];
+  console.log('[ComponentGen] Sample component props:', JSON.stringify(combined[0]?.props).slice(0, 500));
 
-  // Get the exact section types from layout
   const requiredTypes = sections.map((s) => s.type);
 
-  // Filter combined to only include sections that were in the layout
   const filteredCombined = combined.filter((item) => requiredTypes.includes(item.type));
 
-  // If filtering removed everything, fall back to combined
   const effectiveCombined = filteredCombined.length > 0 ? filteredCombined : combined;
+
+  const layoutOrder = sections.map((s) => s.type);
+  const normalizeItemType = (rawType) =>
+    VALID_TYPES.has(rawType) ? rawType : rawType.toLowerCase().replace(/\s+/g, '-');
+
+  const seenTypes = new Set();
+  const dedupedCombined = [];
+  for (const item of effectiveCombined) {
+    if (!item?.type) continue;
+    const type = normalizeItemType(item.type);
+    if (!VALID_TYPES.has(type) || !layoutOrder.includes(type)) continue;
+    if (seenTypes.has(type)) continue;
+    seenTypes.add(type);
+    dedupedCombined.push(item);
+  }
+
+  const orderIndex = new Map(layoutOrder.map((t, i) => [t, i]));
+  dedupedCombined.sort(
+    (a, b) =>
+      (orderIndex.get(normalizeItemType(a.type)) ?? Infinity) -
+      (orderIndex.get(normalizeItemType(b.type)) ?? Infinity)
+  );
+
+  const uniqueCombined = dedupedCombined.length > 0 ? dedupedCombined : effectiveCombined;
 
   const usedIds = new Set();
 
-  const sanitized = effectiveCombined
+  console.log('[Debug] before filter:', effectiveCombined.map(x => x.type));
+  const filtered = uniqueCombined
     .filter((item) => item && item.type)
     .map((item) => {
       let id = item.id;
@@ -318,13 +442,29 @@ export async function generateComponents(layoutResult, analysisResult) {
         id = `${item.type}-${Math.random().toString(36).slice(2, 8)}`;
       }
       usedIds.add(id);
+      const normalizedType = VALID_TYPES.has(item.type)
+        ? item.type
+        : item.type.toLowerCase().replace(/\s+/g, '-');
       return {
         ...item,
-        type: VALID_TYPES.has(item.type) ? item.type : item.type.toLowerCase().replace(/\s+/g, '-'),
+        type: normalizedType,
         id,
+        animations: {
+          entry: item.animations?.entry || 'fade-up',
+          scroll: item.animations?.scroll,
+          hover: item.animations?.hover,
+          special: item.animations?.special,
+          types: getSectionAnimationTypes(
+            normalizedType,
+            analysisResult?.animations?.types || []
+          ),
+        },
       };
     })
     .filter((item) => VALID_TYPES.has(item.type));
+
+  console.log('[Debug] after filter:', filtered.map(x => x.type));
+  const sanitized = filtered;
 
   if (sanitized.length === 0) throw new Error('No valid sections in AI response');
   return sanitized;
